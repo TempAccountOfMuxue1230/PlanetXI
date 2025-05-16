@@ -1,0 +1,14 @@
+{
+  "gui": {
+    "test_menu": {
+      "title": "X1",
+      "button": {
+        "continue": "继续游戏",
+        "new": "新游戏",
+        "saves": "游戏存档",
+        "settings": "设置",
+        "exit": "退出游戏"
+      }
+    }
+  }
+}

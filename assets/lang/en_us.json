@@ -1,0 +1,14 @@
+{
+  "gui": {
+    "test_menu": {
+      "title": "X1",
+      "button": {
+        "continue": "Continue Game",
+        "new": "New Game",
+        "saves": "Game Saves",
+        "settings": "Settings",
+        "exit": "Exit"
+      }
+    }
+  }
+}
