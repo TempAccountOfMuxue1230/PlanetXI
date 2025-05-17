@@ -8,7 +8,7 @@ import pygame
 from pygame.locals import *
 from PIL import Image, ImageSequence
 
-from helper.image import resize_image_to_size
+from helper.image import resize_image_to_size, resize_surface_to_size
 
 
 class Component:
@@ -50,8 +50,6 @@ class TextComponent(Component):
         self.image = self.text_surface
 
 
-import pygame
-
 class ImageComponent(Component):
     def __init__(self, image_source, position, size=None):
         """
@@ -71,7 +69,7 @@ class ImageComponent(Component):
 
         # 缩放图片
         if size:
-            self.original_image = pygame.transform.smoothscale(self.original_image, size)
+            self.original_image = resize_surface_to_size(self.original_image, size)
 
         # 调用父类 Component 初始化
         super().__init__(self.original_image, position)

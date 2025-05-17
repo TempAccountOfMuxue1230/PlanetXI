@@ -22,6 +22,8 @@ pygame.init()
 
 config = config.Config()
 screen = pygame.display.set_mode(pyautogui.size(), DOUBLEBUF | HWSURFACE | NOFRAME, 32, 0, 1)
+pygame.display.set_caption("PlanetXI")
+pygame.display.set_icon(pygame.image.load("assets/icon.png"))
 font = pygame.font.SysFont("comicsans", 30)
 
 screen.fill((0, 0, 0))
