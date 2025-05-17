@@ -6,6 +6,17 @@ from PIL import Image
 import pygame
 
 
+def resize_surface_to_size(surface: pygame.Surface, size: tuple[int, int]) -> pygame.Surface:
+    pil_image = Image.frombytes('RGBA', surface.get_size(), pygame.image.tostring(surface, 'RGBA'))
+
+    resized_pil = pil_image.resize(size, resample=Image.Resampling.LANCZOS)
+
+    resized_data = resized_pil.tobytes()
+
+    # 创建 Pygame Surface
+    return pygame.image.fromstring(resized_data, size, 'RGBA').convert_alpha()
+
+
 def resize_image_to_size(image_path: str, target_size: [int, int]) -> pygame.Surface:
     pil_image = Image.open(image_path).convert('RGBA')
 

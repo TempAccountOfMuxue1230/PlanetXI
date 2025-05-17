@@ -63,7 +63,7 @@ class MainMenuSense(GUISense):
 
         self.components.append(
             ImageComponent(
-                "assets/title.png", (100, 100)))
+                "assets/title.png", (100, 100), (int(600*1.2), int(281*1.2))))
 
         self.components.append(
             ButtonComponent(
