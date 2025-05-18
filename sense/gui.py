@@ -1,6 +1,6 @@
 """
 File: sense/gui.py
-File Version: 1.2
+File Version: 1.3
 """
 import sys
 
@@ -23,6 +23,7 @@ class GUISense(Sense):
         self.background_uv = bg_uv
 
         self.components = []
+        self.next_sense = None
 
     @staticmethod
     def get_name():
@@ -37,11 +38,11 @@ class GUISense(Sense):
         for component in self.components:
             component.draw(screen)
 
-    def close(self):
-        pass
+    def close(self, next_sense):
+        self.next_sense = next_sense
 
     def open(self):
-        pass
+        self.manager.selet(self.get_name())
 
     def event(self, event):
         for component in self.components:
@@ -56,39 +57,50 @@ class MainMenuSense(GUISense):
     def __init__(self, manager):
         super().__init__(manager, "assets/background.png")
 
-        # self.components.append(
-        #     TextComponent(
-        #         self.manager.translator.translate("gui.test_menu.title"),
-        #         (100, 100), size=165))
-
         self.components.append(
             ImageComponent(
-                "assets/title.png", (100, 100), (int(600*1.2), int(281*1.2))))
+                "assets/title.png",
+                (pyautogui.size()[0] * 0.05, pyautogui.size()[1] * 0.05),
+                (int(600*1.2), int(281*1.2))))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.continue"),
-                (100, 500), (500, 100), self.exit_game, size=40, disabled=True))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.30),
+                (500, 100), self.exit_game, size=40, disabled=True))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.new"),
-                (100, 650), (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.40),
+                (500, 100), self.exit_game, size=40))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.saves"),
-                (100, 800), (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.50),
+                (500, 100), self.exit_game, size=40))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.settings"),
-                (100, 950), (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.60),
+                (500, 100), self.exit_game, size=40))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.exit"),
-                (100, 1100), (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.70),
+                (500, 100), self.exit_game, size=40))
+
+        self.black_front = pygame.Surface(pyautogui.size()).convert_alpha()
+        self.black_front.fill((0, 0, 0))
+        self.black_front.set_alpha(255)
+
+        self.is_fade_in = False
+        self.is_fade_out = False
+        self.fade_in = 255
+        self.fade_out = 0
 
     @staticmethod
     def get_name():
@@ -98,3 +110,28 @@ class MainMenuSense(GUISense):
     def exit_game():
         pygame.quit()
         sys.exit()
+
+    def update(self):
+        if self.fade_in <= 0:
+            self.is_fade_in = False
+        if self.is_fade_in:
+            self.fade_in -= 6
+            self.black_front.set_alpha(self.fade_in)
+        if not self.is_fade_in or not self.is_fade_out:
+            super().update()
+
+    def close(self, next_sense):
+        super().close(next_sense)
+        self.is_fade_in = False
+        self.is_fade_out = True
+
+    def open(self):
+        super().open()
+        self.is_fade_in = True
+        self.is_fade_out = False
+
+    def draw(self, screen):
+        super().draw(screen)
+
+        if self.is_fade_in or self.is_fade_out:
+            screen.blit(self.black_front, (0, 0))
