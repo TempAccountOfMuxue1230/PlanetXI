@@ -1,6 +1,6 @@
 """
 File: sense/sense.py
-File Version: 1.2
+File Version: 1.3
 """
 import pyautogui
 from pygame.locals import *
@@ -25,6 +25,63 @@ class Sense:
 
     def draw(self, screen):
         pass
+
+    def event(self, event):
+        pass
+
+
+class LoadSense(Sense):
+    """
+    A class of game sense
+    """
+
+    def __init__(self, manager):
+        Sense.__init__(self, manager)
+
+        self.wasgame = resize_image_to_height("assets/wasgame.png", int(pyautogui.size()[0] * 0.2))
+        self.wasgame_text = resize_image_to_height("assets/wasgame_text.png", int(pyautogui.size()[0] * 0.1))
+
+        self.game_title = resize_image_to_height("assets/title.png", int(pyautogui.size()[0] * 0.2))
+        self.game_title.set_alpha(0)
+
+        self.animation = 0
+        self.animation_p = 1
+        self.animation_k = 0
+
+    @staticmethod
+    def get_name():
+        return "LoadSense"
+
+    def update(self):
+        self.animation += 2 * self.animation_p
+
+        if self.animation == 400:
+            self.animation_p = -1
+        elif self.animation == 0:
+            if self.animation_k:
+                pygame.mixer.music.load('assets/bg_music.mp3')
+                pygame.mixer.music.play(-1)
+                self.manager.get("MainMenuSense").open()
+            self.animation_p = 1
+            self.animation_k = 1
+
+        if self.animation_k == 0:
+            self.wasgame.set_alpha(self.animation)
+            self.wasgame_text.set_alpha(self.animation)
+        else:
+            self.game_title.set_alpha(self.animation)
+
+    def draw(self, screen):
+        screen.fill((0, 0, 0))
+
+        screen.blit(self.wasgame, (pyautogui.size()[0] * 0.5 - self.wasgame.get_size()[0] * 0.5
+                                   - self.wasgame_text.get_size()[0] * 0.5,
+                                   pyautogui.size()[1] * 0.5 - self.wasgame.get_size()[1] * 0.5))
+        screen.blit(self.wasgame_text, (pyautogui.size()[0] * 0.5 - self.wasgame_text.get_size()[0] * 0.1,
+                                        pyautogui.size()[1] * 0.5 - self.wasgame_text.get_size()[1] * 0.5))
+
+        screen.blit(self.game_title, (pyautogui.size()[0] * 0.5 - self.game_title.get_size()[0] * 0.5,
+                                      pyautogui.size()[1] * 0.5 - self.game_title.get_size()[1] * 0.5))
 
     def event(self, event):
         pass

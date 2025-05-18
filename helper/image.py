@@ -1,6 +1,6 @@
 """
 File: helper/image.py
-File Version: 1.1
+File Version: 1.2
 """
 from PIL import Image
 import pygame
@@ -95,17 +95,17 @@ def resize_image_to_height(image_path: str, target_height: int) -> pygame.Surfac
 
 def split_image_into_grid(image_path: str, height_present: float) -> list[list[pygame.Surface]]:
     """
-    将指定路径的 1024x1024 图片分割为 4x4 的网格，返回包含每个子图的二维列表。
+将指定路径的 1024x1024 图片分割为 4x4 的网格，返回包含每个子图的二维列表。
 
-    参数:
-        image_path (str): 图像文件路径
+参数:
+    image_path (str): 图像文件路径
 
-    返回:
-        list[list[PIL.Image]]: 4x4 的二维列表，每个元素为一个子图的 PIL.Image 对象
+返回:
+    list[list[PIL.Image]]: 4x4 的二维列表，每个元素为一个子图的 PIL.Image 对象
 
-    注意:
-        - 假设输入图片尺寸为 1024x1024，若尺寸不符可能导致结果异常。
-    """
+注意:
+    - 假设输入图片尺寸为 1024x1024，若尺寸不符可能导致结果异常。
+"""
     # 加载图像
     image = Image.open(image_path)
 
