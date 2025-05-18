@@ -1,6 +1,6 @@
 """
 File: sense/gui_components.py
-File Version: 1.2
+File Version: 1.3
 """
 import cv2
 import numpy as np
@@ -8,7 +8,7 @@ import pygame
 from pygame.locals import *
 from PIL import Image, ImageSequence
 
-from helper.image import resize_image_to_size, resize_surface_to_size
+from helper.image import resize_image_to_size, resize_surface_to_size, resize_surface_to_height, resize_image_to_height
 
 
 class Component:
@@ -69,7 +69,10 @@ class ImageComponent(Component):
 
         # 缩放图片
         if size:
-            self.original_image = resize_surface_to_size(self.original_image, size)
+            if isinstance(size, tuple):
+                self.original_image = resize_surface_to_size(self.original_image, size)
+            else:
+                self.original_image = resize_surface_to_height(self.original_image, size)
 
         # 调用父类 Component 初始化
         super().__init__(self.original_image, position)
@@ -103,9 +106,14 @@ class ButtonComponent(TextComponent):
                  nor_img='assets/btn/normal.png', hov_img='assets/btn/hover.png', cli_img='assets/btn/click.png'):
         super().__init__(text, position, font, size, bold, italic)
 
-        self.btn_normal = resize_image_to_size(nor_img, btn_size)
-        self.btn_hover = resize_image_to_size(hov_img, btn_size)
-        self.btn_click = resize_image_to_size(cli_img, btn_size)
+        if isinstance(btn_size, tuple):
+            self.btn_normal = resize_image_to_size(nor_img, btn_size)
+            self.btn_hover = resize_image_to_size(hov_img, btn_size)
+            self.btn_click = resize_image_to_size(cli_img, btn_size)
+        else:
+            self.btn_normal = resize_image_to_height(nor_img, btn_size)
+            self.btn_hover = resize_image_to_height(hov_img, btn_size)
+            self.btn_click = resize_image_to_height(cli_img, btn_size)
 
         self.present_img = self.btn_normal
         self.present_rect = self.present_img.get_rect(topleft=self.position)

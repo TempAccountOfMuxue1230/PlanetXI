@@ -1,6 +1,6 @@
 """
 File: sense/gui.py
-File Version: 1.3
+File Version: 1.4
 """
 import sys
 
@@ -61,37 +61,37 @@ class MainMenuSense(GUISense):
             ImageComponent(
                 "assets/title.png",
                 (pyautogui.size()[0] * 0.05, pyautogui.size()[1] * 0.05),
-                (int(600*1.2), int(281*1.2))))
+                int(pyautogui.size()[1] * 0.3)))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.continue"),
-                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.30),
-                (500, 100), self.exit_game, size=40, disabled=True))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.40),
+                (int(pyautogui.size()[0] * 0.25), int(pyautogui.size()[1] * 0.08)), self.exit_game, size=40, disabled=True))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.new"),
-                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.40),
-                (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.50),
+                (int(pyautogui.size()[0] * 0.25), int(pyautogui.size()[1] * 0.08)), self.exit_game, size=40))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.saves"),
-                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.50),
-                (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.60),
+                (int(pyautogui.size()[0] * 0.25), int(pyautogui.size()[1] * 0.08)), self.exit_game, size=40))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.settings"),
-                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.60),
-                (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.70),
+                (int(pyautogui.size()[0] * 0.25), int(pyautogui.size()[1] * 0.08)), self.exit_game, size=40))
 
         self.components.append(
             ButtonComponent(
                 self.manager.translator.translate("gui.test_menu.button.exit"),
-                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.70),
-                (500, 100), self.exit_game, size=40))
+                (pyautogui.size()[0] * 0.1, pyautogui.size()[1] * 0.80),
+                (int(pyautogui.size()[0] * 0.25), int(pyautogui.size()[1] * 0.08)), self.exit_game, size=40))
 
         self.black_front = pygame.Surface(pyautogui.size()).convert_alpha()
         self.black_front.fill((0, 0, 0))

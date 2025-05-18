@@ -1,10 +1,10 @@
 """
 Project: X1
-Version: 1.0.4
+Version: 1.0.5
 Author: MUXUE1230
 
 File: main.py
-File Version: 1.4
+File Version: 1.5
 """
 import pyautogui
 import config
