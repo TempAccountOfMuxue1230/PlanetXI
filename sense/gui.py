@@ -1,6 +1,6 @@
 """
 File: sense/gui.py
-File Version: 1.4
+File Version: 1.5
 """
 import sys
 
@@ -42,7 +42,7 @@ class GUISense(Sense):
         self.next_sense = next_sense
 
     def open(self):
-        self.manager.selet(self.get_name())
+        self.manager.select(self.get_name())
 
     def event(self, event):
         for component in self.components:
@@ -97,9 +97,7 @@ class MainMenuSense(GUISense):
         self.black_front.fill((0, 0, 0))
         self.black_front.set_alpha(255)
 
-        self.is_fade_in = False
         self.is_fade_out = False
-        self.fade_in = 255
         self.fade_out = 0
 
     @staticmethod
@@ -112,12 +110,12 @@ class MainMenuSense(GUISense):
         sys.exit()
 
     def update(self):
-        if self.fade_in <= 0:
-            self.is_fade_in = False
-        if self.is_fade_in:
-            self.fade_in -= 6
-            self.black_front.set_alpha(self.fade_in)
-        if not self.is_fade_in or not self.is_fade_out:
+        if self.fade_out >= 255:
+            self.is_fade_out = False
+        if self.is_fade_out:
+            self.fade_out += 6
+            self.black_front.set_alpha(self.fade_out)
+        if not self.is_fade_out:
             super().update()
 
     def close(self, next_sense):
@@ -133,5 +131,5 @@ class MainMenuSense(GUISense):
     def draw(self, screen):
         super().draw(screen)
 
-        if self.is_fade_in or self.is_fade_out:
+        if self.is_fade_out:
             screen.blit(self.black_front, (0, 0))

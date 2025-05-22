@@ -1,6 +1,6 @@
 """
 File: sense/gui_components.py
-File Version: 1.3
+File Version: 1.4
 """
 import cv2
 import numpy as np
@@ -254,3 +254,156 @@ class VideoComponent(Component):
     def stop(self):
         self.is_playing = False
         self.cap.release()
+
+
+class ProgressBarComponent(Component):
+    """
+    A class that represents a horizontal progress bar component with an optional title.
+    """
+
+    def __init__(self, position, size,
+                 progress=0,
+                 fg_color=(0, 200, 255),
+                 bg_color=(50, 50, 50),
+                 border_color=None,
+                 border_width=0,
+                 radius=0,
+                 title="",
+                 title_pos="n",
+                 title_font='SimSun',
+                 title_size=20,
+                 title_bold=False,
+                 title_italic=False,
+                 title_color=(255, 255, 255)):
+        """
+        :param position: 进度条在屏幕上的位置 (x, y)
+        :param size: 进度条尺寸 (width, height)
+        :param progress: 初始进度值 (0-100)
+        :param fg_color: 前景色 (填充部分)
+        :param bg_color: 背景色 (背景部分)
+        :param border_color: 边框颜色
+        :param border_width: 边框宽度
+        :param radius: 圆角半径 (0-50)
+        :param title: 标题文本
+        :param title_pos: 标题显示位置，可选值：n, s, e, w, m, nw, ne, se, sw
+        :param title_font: 标题字体
+        :param title_size: 标题字号
+        :param title_bold: 是否加粗
+        :param title_italic: 是否斜体
+        :param title_color: 标题颜色
+        """
+        self.size = size
+        self.progress = progress
+        self.fg_color = fg_color
+        self.bg_color = bg_color
+        self.border_color = border_color
+        self.border_width = border_width
+        self.radius = radius
+
+        # 标题相关
+        self.title = title
+        self.title_pos = title_pos
+        self.title_color = title_color
+        self.title_font = pygame.font.SysFont(title_font, title_size, title_bold, title_italic)
+        self.title_surface = None
+        self._render_title()
+
+        # 创建进度条图像
+        self.image = pygame.Surface(self.size, pygame.SRCALPHA)
+        self._render()
+
+        super().__init__(self.image, position)
+
+    def _render_title(self):
+        """渲染标题文本"""
+        if self.title:
+            self.title_surface = self.title_font.render(self.title, True, self.title_color)
+        else:
+            self.title_surface = None
+
+    def _render(self):
+        """重新绘制进度条"""
+        self.image.fill((0, 0, 0, 0))  # 完全透明
+
+        # 绘制背景
+        pygame.draw.rect(self.image, self.bg_color,
+                         (0, 0, self.size[0], self.size[1]),
+                         border_radius=self._calc_radius())
+
+        # 计算填充区域
+        fill_width = int(self.size[0] * (self.progress / 100))
+
+        # 绘制前景
+        pygame.draw.rect(self.image, self.fg_color,
+                         (0, 0, fill_width, self.size[1]),
+                         border_top_left_radius=self._calc_radius() if fill_width == self.size[0] else 0,
+                         border_bottom_left_radius=self._calc_radius() if fill_width == self.size[0] else 0)
+
+        # 绘制边框
+        if self.border_width > 0 and self.border_color:
+            pygame.draw.rect(self.image, self.border_color,
+                             (0, 0, self.size[0], self.size[1]),
+                             width=self.border_width,
+                             border_radius=self._calc_radius())
+
+    def _calc_radius(self):
+        """计算圆角半径（像素）"""
+        return int(min(self.size) * self.radius / 100)
+
+    def set_progress(self, progress):
+        """设置进度值（0-100）"""
+        if 0 <= progress <= 100 and progress != self.progress:
+            self.progress = progress
+            self._render()
+
+    def set_title(self, new_title):
+        """更新标题文本"""
+        if self.title != new_title:
+            self.title = new_title
+            self._render_title()
+
+    def update(self):
+        """用于保持组件接口一致性"""
+        pass
+
+    def draw(self, screen):
+        """绘制组件及标题"""
+        # 绘制进度条
+        screen.blit(self.image, self.position)
+
+        # 绘制标题
+        if self.title_surface:
+            pb_rect = pygame.Rect(self.position[0], self.position[1], self.size[0], self.size[1])
+            title_width, title_height = self.title_surface.get_size()
+            title_rect = pygame.Rect(0, 0, title_width, title_height)
+
+            # 根据 title_pos 设置标题位置
+            if self.title_pos == 'n':
+                title_rect.centerx = pb_rect.centerx
+                title_rect.bottom = pb_rect.top
+            elif self.title_pos == 's':
+                title_rect.centerx = pb_rect.centerx
+                title_rect.top = pb_rect.bottom
+            elif self.title_pos == 'e':
+                title_rect.centery = pb_rect.centery
+                title_rect.left = pb_rect.right
+            elif self.title_pos == 'w':
+                title_rect.centery = pb_rect.centery
+                title_rect.right = pb_rect.left
+            elif self.title_pos == 'm':
+                title_rect.center = pb_rect.center
+            elif self.title_pos == 'nw':
+                title_rect.topleft = pb_rect.topleft
+            elif self.title_pos == 'ne':
+                title_rect.topright = pb_rect.topright
+            elif self.title_pos == 'se':
+                title_rect.bottomright = pb_rect.bottomright
+            elif self.title_pos == 'sw':
+                title_rect.bottomleft = pb_rect.bottomleft
+            else:
+                # 默认 'n'
+                title_rect.centerx = pb_rect.centerx
+                title_rect.bottom = pb_rect.top
+
+            # 绘制标题
+            screen.blit(self.title_surface, title_rect.topleft)

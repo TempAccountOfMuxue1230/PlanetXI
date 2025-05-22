@@ -1,10 +1,10 @@
 """
 Project: X1
-Version: 1.0.5
+Version: 1.0.6
 Author: MUXUE1230
 
 File: main.py
-File Version: 1.5
+File Version: 1.6
 """
 import pyautogui
 import config
@@ -32,8 +32,9 @@ translator.use_lang('zh_cn')
 
 sense_manager = SenseManager(translator)
 sense_manager.add(LoadSense)
+sense_manager.add(GetReadySense)
 sense_manager.add(MainMenuSense)
-sense_manager.selet("LoadSense")
+sense_manager.select("LoadSense")
 
 clock = pygame.time.Clock()
 

@@ -1,8 +1,13 @@
 """
 File: sense/sense.py
-File Version: 1.3
+File Version: 1.5
 """
+import threading
+import time
+
 import pyautogui
+import requests
+from bs4 import BeautifulSoup
 from pygame.locals import *
 
 from helper.image import *
@@ -27,6 +32,9 @@ class Sense:
         pass
 
     def event(self, event):
+        pass
+
+    def async_handler(self):
         pass
 
 
@@ -61,7 +69,7 @@ class LoadSense(Sense):
             if self.animation_k:
                 pygame.mixer.music.load('assets/bg_music.mp3')
                 pygame.mixer.music.play(-1)
-                self.manager.get("MainMenuSense").open()
+                self.manager.select("GetReadySense")
             self.animation_p = 1
             self.animation_k = 1
 
@@ -87,56 +95,86 @@ class LoadSense(Sense):
         pass
 
 
-class TestSense(Sense):
+class GetReadySense(Sense):
     """
     A class of game sense
     """
 
-    def __init__(self, manager, bg_img_path, actor_img_path):
-        super().__init__(manager)
+    def __init__(self, manager):
+        Sense.__init__(self, manager)
 
-        self.background_image = resize_image_to_height(bg_img_path, pyautogui.size().height).convert()
-        self.actor = split_image_into_grid(actor_img_path, 5)
+        self.background = resize_image_to_height("assets/background.png", pyautogui.size()[1])
 
-        self.x = 0
-        self.t = 0
-        self.actor_animation = [True, 0]
+        self.black_front = pygame.Surface(pyautogui.size()).convert_alpha()
+        self.black_front.fill((0, 0, 0))
+        self.black_front.set_alpha(255)
+
+        self.is_fade_in = True
+        self.fade_in = 255
+
+        self.front_screen = pygame.Surface(pyautogui.size()).convert_alpha()
+
+        threading.Thread(target=self.async_handler).start()
+
+    def event(self, event):
+        super().event(event)
 
     @staticmethod
     def get_name():
-        return "TestSence"
+        return "GetReadySense"
 
     def update(self):
-        if pygame.key.get_pressed()[K_a]:
-            self.x += 5
-            self.t += 1
-            self.actor_animation[0] = False
-            if self.x >= self.background_image.get_width():
-                self.x = 0
-        elif pygame.key.get_pressed()[K_d]:
-            self.x -= 5
-            self.t += 1
-            self.actor_animation[0] = True
-            if self.x <= -self.background_image.get_width():
-                self.x = 0
-        else:
-            self.t = 0
-            self.actor_animation[1] = 0
+        super().update()
 
-        if self.t % 25 == 0:
-            self.actor_animation[1] = (self.actor_animation[1] + 1) % 4
+        if self.fade_in <= 0:
+            self.is_fade_in = False
+        if self.is_fade_in:
+            self.fade_in -= 6
+            self.black_front.set_alpha(self.fade_in)
 
     def draw(self, screen):
-        screen.blit(self.background_image, (self.x, 0))
-        screen.blit(self.background_image, (self.background_image.get_width() + self.x, 0))
-        screen.blit(self.background_image, (self.background_image.get_width() * 2 + self.x, 0))
-        screen.blit(self.background_image, (-self.background_image.get_width() + self.x, 0))
-        screen.blit(
-            self.actor[1 + self.actor_animation[0]][self.actor_animation[1]],
-            (
-                self.background_image.get_width() // 2 - self.actor[1 + self.actor_animation[0]][
-                    self.actor_animation[1]].get_width(),
-                round(self.background_image.get_height() * 0.9) - self.actor[1 + self.actor_animation[0]][
-                    self.actor_animation[1]].get_height()
-            )
-        )
+        super().draw(screen)
+
+        self.front_screen.blit(self.background, (0, 0))
+        screen.blit(self.front_screen, (0, 0))
+
+        if self.is_fade_in:
+            screen.blit(self.black_front, (0, 0))
+
+    def get_latest_release_name(self):
+        url = 'https://github.com/TempAccountOfMuxue1230/PlanetXI/releases '
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": "https://github.com/ ",
+            "DNT": "1",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Dest": "document"
+        }
+
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"请求失败: {e}")
+            return None
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # 查找所有 h2 标签，提取以 "X1 V" 开头的版本标题
+        for h2 in soup.find_all('h2'):
+            title = h2.get_text(strip=True)
+            if title.startswith('X1 V'):
+                return title
+
+        return None
+
+    def async_handler(self):
+        while self.is_fade_in:
+            time.sleep(0.5)
+
+        time.sleep(10)
+
+        self.manager.select("MainMenuSense")

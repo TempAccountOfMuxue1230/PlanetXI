@@ -1,6 +1,6 @@
 """
 File: sense/sense_manager.py
-File Version: 1.2
+File Version: 1.3
 """
 
 
@@ -17,7 +17,7 @@ class SenseManager:
     def add(self, sence, *args, **argv):
         self.sences[sence.get_name()] = sence(self, *args, **argv)
 
-    def selet(self, sence_id):
+    def select(self, sence_id):
         self.seleted = sence_id
 
     def get(self, sence_id=None):
