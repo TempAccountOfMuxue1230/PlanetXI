@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 from pygame.locals import *
 
 from helper.image import *
+from helper.utils import Version
+from sense.gui_componts import ProgressBarComponent
 
 
 class Sense:
@@ -113,6 +115,12 @@ class GetReadySense(Sense):
         self.fade_in = 255
 
         self.front_screen = pygame.Surface(pyautogui.size()).convert_alpha()
+        self.front_screen.fill((0, 0, 0, 0))
+        self.prograss = ProgressBarComponent((pyautogui.size()[0] * 0.02, pyautogui.size()[1] * 0.9),
+                                             (pyautogui.size()[0] * 0.96, 10),
+                                             10, (100, 100, 255), (120, 120, 120),
+                                             title="Checking Update...", title_pos='nw', title_bold=True,
+                                             title_size=24)
 
         threading.Thread(target=self.async_handler).start()
 
@@ -135,14 +143,14 @@ class GetReadySense(Sense):
     def draw(self, screen):
         super().draw(screen)
 
-        self.front_screen.blit(self.background, (0, 0))
+        screen.blit(self.background, (0, 0))
         screen.blit(self.front_screen, (0, 0))
 
         if self.is_fade_in:
             screen.blit(self.black_front, (0, 0))
 
     def get_latest_release_name(self):
-        url = 'https://github.com/TempAccountOfMuxue1230/PlanetXI/releases '
+        url = 'https://github.com/TempAccountOfMuxue1230/PlanetXI/releases'
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                           "Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
@@ -175,6 +183,17 @@ class GetReadySense(Sense):
         while self.is_fade_in:
             time.sleep(0.5)
 
-        time.sleep(10)
+        self.prograss.draw(self.front_screen)
 
-        self.manager.select("MainMenuSense")
+        latest_version = Version(self.get_latest_release_name())
+        version = Version("X1 V1.0.6 Alpha")
+
+        if latest_version > version:
+            pass
+        else:
+            self.prograss.set_progress(100)
+            self.prograss.draw(self.front_screen)
+            time.sleep(0.1)
+            self.front_screen.fill((0, 0, 0, 0))
+            time.sleep(0.5)
+            self.manager.select("MainMenuSense")

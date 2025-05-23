@@ -1,10 +1,16 @@
 """
 File: sense/gui_components.py
-File Version: 1.4
+File Version: 2.0
 """
+import ctypes
+import threading
+import time
+import uuid
+
 import cv2
 import numpy as np
 import pygame
+import webview
 from pygame.locals import *
 from PIL import Image, ImageSequence
 
@@ -102,7 +108,8 @@ class ButtonComponent(TextComponent):
     A class that represents a button component in the sense
     """
 
-    def __init__(self, text, position, btn_size, function, font='SimSun', size=20, bold=False, italic=False, disabled=False,
+    def __init__(self, text, position, btn_size, function, font='SimSun', size=20, bold=False, italic=False,
+                 disabled=False,
                  nor_img='assets/btn/normal.png', hov_img='assets/btn/hover.png', cli_img='assets/btn/click.png'):
         super().__init__(text, position, font, size, bold, italic)
 
@@ -197,6 +204,7 @@ class VideoComponent(Component):
     """
     A class that represents a video component in the sense
     """
+
     def __init__(self, video_path, position, size=None, loop=False):
         super().__init__(None, position)  # image 由 update 更新
 
@@ -305,7 +313,7 @@ class ProgressBarComponent(Component):
         self.title_pos = title_pos
         self.title_color = title_color
         self.title_font = pygame.font.SysFont(title_font, title_size, title_bold, title_italic)
-        self.title_surface = None
+        self.title_surface = pygame.Surface((0, 0)).convert_alpha()
         self._render_title()
 
         # 创建进度条图像
@@ -369,7 +377,7 @@ class ProgressBarComponent(Component):
     def draw(self, screen):
         """绘制组件及标题"""
         # 绘制进度条
-        screen.blit(self.image, self.position)
+        screen.blit(self.image, (self.position[0], self.position[1] + self.title_surface.get_height()))
 
         # 绘制标题
         if self.title_surface:
@@ -407,3 +415,179 @@ class ProgressBarComponent(Component):
 
             # 绘制标题
             screen.blit(self.title_surface, title_rect.topleft)
+
+
+class HTML5Component(Component):
+    """
+    支持 JS 交互与自动定位的 HTML5 组件
+    特点：无边框、不可移动、不可缩放、始终置顶 Pygame 窗口之上
+    """
+
+    def __init__(self, position, size, url=None, html=None, parent_window=None):
+        """
+        :param position: 在 Pygame 中的坐标 (x, y)
+        :param size: 尺寸 (width, height)
+        :param url: 要加载的网页 URL
+        :param html: 要加载的 HTML 字符串内容（优先于 url）
+        :param parent_window: Pygame 主窗口标题（用于自动定位）
+        """
+        self.url = url
+        self.html = html
+        self.position = position
+        self.size = size
+        self.parent_window = self._find_window_by_title(parent_window)
+        self.webview_window = None
+        self.running = False
+        self.hwnd = None  # 网页窗口句柄
+        self.js_api = None  # JS API 对象
+        self.position_monitor_thread = None  # 自动定位线程
+        self.uuid = uuid.uuid4()
+
+        # 创建透明占位图像
+        self.image = pygame.Surface(self.size, pygame.SRCALPHA)
+        self.image.fill((0, 0, 0, 0))  # 完全透明
+
+        super().__init__(self.image, position)
+
+    def start(self):
+        """启动网页窗口"""
+        if self.running:
+            return
+
+        self.running = True
+        self.js_api = self._create_js_api()
+        threading.Thread(target=self._run_webview, daemon=True).start()
+
+    def _create_js_api(self):
+        """创建 JS API 对象，供网页调用"""
+
+        class JSAPI:
+            def __init__(self, component):
+                self.component = component
+
+            def send_message_to_pygame(self, message):
+                """网页调用此方法发送消息到 Pygame"""
+                print("收到网页消息:", message)
+                # 可以在这里触发 Pygame 自定义事件
+                event = pygame.event.Event(pygame.USEREVENT, {"source": "webview", "message": message})
+                pygame.event.post(event)
+
+            def get_pygame_position(self):
+                """网页查询 Pygame 窗口位置"""
+                if self.component.parent_window:
+                    rect = self.component.parent_window.get_rect()
+                    return {'x': rect.x, 'y': rect.y}
+                return {'x': 0, 'y': 0}
+
+        return JSAPI(self)
+
+    def _run_webview(self):
+        """在子线程中启动 webview 窗口"""
+        try:
+            # 创建无标题栏窗口
+            kwargs = {
+                'title': self.uuid,
+                'width': self.size[0],
+                'height': self.size[1],
+                'resizable': False,
+                'frameless': True,
+                'on_top': True,
+                'js_api': self.js_api
+            }
+
+            if self.html:
+                self.webview_window = webview.create_window(html=self.html, **kwargs)
+            elif self.url:
+                self.webview_window = webview.create_window(url=self.url, **kwargs)
+            else:
+                self.webview_window = webview.create_window(html="<h1>Empty</h1>", **kwargs)
+
+            webview.start(gui='edgechromium')  # 强制使用 Edge Chromium 内核
+
+            # 获取窗口句柄并设置样式
+            self.hwnd = self._find_window_by_title(self.uuid)
+            if self.hwnd:
+                self._set_window_style()
+                self._set_window_position()
+                self._start_position_monitor()
+
+        except Exception as e:
+            print("Webview 启动失败:", e)
+            self.running = False
+
+    def _find_window_by_title(self, title):
+        """通过标题查找窗口句柄"""
+        hwnd = ctypes.windll.user32.FindWindowW(None, title)
+        if hwnd == 0:
+            time.sleep(0.5)  # 等待窗口创建完成
+            hwnd = ctypes.windll.user32.FindWindowW(None, title)
+        return hwnd
+
+    def _set_window_style(self):
+        """设置无边框、不可移动、不可缩放"""
+        GWL_STYLE = -16
+        WS_CAPTION = 0xC00000
+        WS_THICKFRAME = 0x40000
+
+        style = ctypes.windll.user32.GetWindowLongW(self.hwnd, GWL_STYLE)
+        style &= ~WS_CAPTION  # 去掉标题栏
+        style &= ~WS_THICKFRAME  # 去掉调整边框
+        ctypes.windll.user32.SetWindowLongW(self.hwnd, GWL_STYLE, style)
+
+    def _set_window_position(self):
+        """设置窗口位置，覆盖在 Pygame 指定位置"""
+        if not self.parent_window:
+            x, y = self.position
+        else:
+            rect = self.parent_window.get_rect()
+            x, y = rect.x + self.position[0], rect.y + self.position[1]
+
+        w, h = self.size
+        HWND_TOPMOST = -1
+        SWP_NOOWNERZORDER = 0x0200
+
+        ctypes.windll.user32.SetWindowPos(
+            self.hwnd, HWND_TOPMOST,
+            x, y, w, h,
+            SWP_NOOWNERZORDER
+        )
+
+    def _start_position_monitor(self):
+        """启动自动定位线程"""
+        if self.parent_window is None:
+            return
+
+        self.position_monitor_thread = threading.Thread(target=self._monitor_position, daemon=True)
+        self.position_monitor_thread.start()
+
+    def _monitor_position(self):
+        """监控主窗口位置变化，自动更新网页窗口位置"""
+        last_pos = self.parent_window.get_rect().topleft
+        while self.running:
+            current_pos = self.parent_window.get_rect().topleft
+            if current_pos != last_pos:
+                self._set_window_position()
+                last_pos = current_pos
+            time.sleep(0.1)
+
+    def update(self):
+        """用于保持组件接口一致性"""
+        pass
+
+    def draw(self, screen):
+        """绘制组件（仅占位）"""
+        screen.blit(self.image, self.position)
+
+    def close(self):
+        """关闭网页窗口"""
+        if self.webview_window:
+            try:
+                self.webview_window.destroy()
+            except:
+                pass
+            self.running = False
+
+    def execute_js(self, script):
+        """从 Python 调用 JavaScript 脚本"""
+        if self.webview_window:
+            self.webview_window.evaluate_js(script)

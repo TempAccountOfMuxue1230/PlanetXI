@@ -1,10 +1,10 @@
 """
 Project: X1
-Version: 1.0.6
+Version: 1.0.7
 Author: MUXUE1230
 
 File: main.py
-File Version: 1.6
+File Version: 1.7
 """
 import pyautogui
 import config
@@ -44,10 +44,16 @@ while True:
             pygame.quit()
             sys.exit()
         sense_manager.get().event(event)
+        if sense_manager.osg_is_opened():
+            sense_manager.get_osg().event(event)
 
     sense_manager.get().update()
+    if sense_manager.osg_is_opened():
+        sense_manager.get_osg().update()
 
     sense_manager.get().draw(screen)
+    if sense_manager.osg_is_opened():
+        sense_manager.get_osg().draw(screen)
 
     screen.blit(font.render(f"FPS:{round(clock.get_fps())}", True, (255, 255, 255)), (10, 10))
     pygame.display.flip()
