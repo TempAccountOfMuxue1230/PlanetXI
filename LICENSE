@@ -616,8 +616,6 @@ an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
 
-                     END OF TERMS AND CONDITIONS
-
 [Additional Terms]
 PATENT GRANT (Based on Apache 2.0 Section 3):
   1. All Contributors grant the User an irrevocable worldwide patent 
@@ -633,5 +631,7 @@ it must be marked in a prominent place as "Derived from PlanetXI".
 
 DISCLAIMER:
 The code is provided as is, without any liability.
+
+                     END OF TERMS AND CONDITIONS
 
 This license is compatible with the GNU AGPLv3 and Apache 2.0 open source definitions.
